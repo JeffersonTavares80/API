@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exibir Dados da API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .loading {
+            font-style: italic;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dados da API</h1>
+
+    <label for="table-select">Escolha a tabela:</label>
+    <select id="table-select">
+        <option value="ods">ODS</option>
+        <option value="dominios">Domínios</option>
+        <option value="servicos">Serviços</option>
+        <option value="programas">Programas</option>
+        <option value="programa_ods">Programa-ODS</option>
+        <option value="inscricoes">Inscrições</option>
+        <option value="participantes_programa">Participantes do Programa</option>
+        <option value="agendamentos_servico">Agendamentos de Serviço</option>
+    </select>
+
+    <div id="data-display" class="loading">Carregando dados...</div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1:8000/';
+
+        async function fetchData(table) {
+            try {
+                const response = await fetch(baseUrl + table + '/');
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar dados: ' + response.statusText);
+                }
+                const data = await response.json();
+
+                // Exibir os dados em uma tabela
+                const displayDiv = document.getElementById('data-display');
+                if (data.length > 0) {
+                    let tableHtml = '<table><thead><tr>';
+                    
+                    // Dynamically create headers based on the first row of data
+                    Object.keys(data[0]).forEach(key => {
+                        tableHtml += `<th>${key}</th>`;
+                    });
+                    tableHtml += '</tr></thead><tbody>';
+                    
+                    data.forEach(item => {
+                        tableHtml += '<tr>';
+                        Object.values(item).forEach(value => {
+                            tableHtml += `<td>${value}</td>`;
+                        });
+                        tableHtml += '</tr>';
+                    });
+                    tableHtml += '</tbody></table>';
+                    
+                    displayDiv.innerHTML = tableHtml;
+                } else {
+                    displayDiv.innerHTML = 'Nenhum dado encontrado.';
+                }
+            } catch (error) {
+                document.getElementById('data-display').innerHTML = 'Erro ao carregar dados: ' + error.message;
+            }
+        }
+
+        function handleTableChange() {
+            const selectedTable = document.getElementById('table-select').value;
+            fetchData(selectedTable);
+        }
+
+        // Adiciona um listener para alterar a tabela quando o usuário seleciona uma opção
+        document.getElementById('table-select').addEventListener('change', handleTableChange);
+
+        // Carregar dados da tabela padrão ao carregar a página
+        window.onload = () => {
+            fetchData(document.getElementById('table-select').value);
+        };
+    </script>
+</body>
+</html>
